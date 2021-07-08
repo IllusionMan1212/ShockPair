@@ -1,0 +1,71 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
+    android.ndkVersion = "21.3.6528147"
+
+    defaultConfig {
+        applicationId "com.illusionware.shockpair"
+        minSdkVersion 29
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+        useIR = true
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/c/CMakeLists.txt')
+            version "3.10.2"
+        }
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation "com.github.topjohnwu.libsu:core:3.1.2"
+    implementation "com.github.topjohnwu.libsu:service:3.1.2"
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+}
+
+// function to run before the build starts.
+// this function runs the ndk-build binary on the bluez bluetooth lib to build the shared lib
+task runNdkBuild(type: Exec) {
+    def ndkDir = android.ndkDirectory
+    executable = "$ndkDir/ndk-build"
+    args = ['NDK_PROJECT_PATH=build/intermediates/ndk',
+            'NDK_LIBS_OUT=src/main/btLibs',
+            'APP_BUILD_SCRIPT=src/main/c/bluez-android-3.35/libs/Android.mk']
+}
+
+// tell gradle to run the function before the build
+preBuild.dependsOn runNdkBuild
